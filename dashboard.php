@@ -7,10 +7,8 @@ if (!isset($_GET['username'])) {
 
 $username = htmlspecialchars($_GET['username']);
 
-// Fetch tags for filtering
 $tags = $pdo->query('SELECT DISTINCT tag FROM problem_tags')->fetchAll(PDO::FETCH_COLUMN);
 
-// Fetch problems and submissions from the database
 $filteredTag = isset($_GET['tag']) ? htmlspecialchars($_GET['tag']) : '';
 $pageProblems = isset($_GET['pageProblems']) ? (int)$_GET['pageProblems'] : 1;
 $pageSubmissions = isset($_GET['pageSubmissions']) ? (int)$_GET['pageSubmissions'] : 1;
@@ -32,7 +30,6 @@ $stmtSubmissions = $pdo->prepare('SELECT * FROM submissions WHERE username = ? O
 $stmtSubmissions->execute([$username, $limit, $offsetSubmissions]);
 $submissions = $stmtSubmissions->fetchAll(PDO::FETCH_ASSOC);
 
-// Create an associative array of submissions for quick lookup
 $submissionMap = [];
 foreach ($submissions as $submission) {
     $submissionMap[$submission['title_slug']] = $submission['status'];
@@ -150,8 +147,8 @@ function formatTimestamp($timestamp) {
         ul li a:hover {
             text-decoration: underline;
         }
-        ul li button {
-            padding: 5px 10px 5px 10px;
+        button {
+            padding: 5px 10px;
             background-color: #007bff;
             color: white;
             border: none;
@@ -162,6 +159,24 @@ function formatTimestamp($timestamp) {
         ul li button:hover {
             background-color: #0056b3;
         }
+        .status-accepted {
+            color: green;
+            font-weight: bold;
+        }
+        .status-rejected {
+            color: red;
+            font-weight: bold;
+        }
+        .status-icon {
+            font-size: 18px;
+            margin-right: 10px;
+        }
+        .status-icon.accepted {
+            color: green;
+        }
+        .status-icon.rejected {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -169,8 +184,10 @@ function formatTimestamp($timestamp) {
         <h1><?= htmlspecialchars($username) ?>'s Dashboard</h1>
         <nav>
             <ul>
+                <li><a href="index.php">Logout</a></li>
                 <li><a href="#problems" onclick="showTab('problems')">Problems</a></li>
                 <li><a href="#submissions" onclick="showTab('submissions')">Submissions</a></li>
+                <li><a href="https://leetcode.com/u/<?= htmlspecialchars($username) ?>/">Go to Leetcode</a></li>
             </ul>
         </nav>
 
@@ -217,9 +234,14 @@ function formatTimestamp($timestamp) {
             <h2>Submissions</h2>
             <ul>
                 <?php foreach ($submissions as $submission): ?>
+                    <?php
+                    $statusClass = $submission['status'] == 'Accepted' ? 'status-accepted' : 'status-rejected';
+                    $iconClass = $submission['status'] == 'Accepted' ? 'status-icon accepted' : 'status-icon rejected';
+                    ?>
                     <li>
+                        <span class="<?= $iconClass ?>"><?= $submission['status'] == 'Accepted' ? '✔' : '✘' ?></span>
                         <?= formatTimestamp($submission['timestamp']) ?> -
-                        <?= htmlspecialchars($submission['title']) ?> - <?= htmlspecialchars($submission['status']) ?>
+                        <?= htmlspecialchars($submission['title']) ?> - <span class="<?= $statusClass ?>"><?= htmlspecialchars($submission['status']) ?></span>
                     </li>
                 <?php endforeach; ?>
             </ul>
@@ -241,7 +263,7 @@ function formatTimestamp($timestamp) {
         }
 
         function openMemo(titleSlug) {
-            window.open('memo.php?titleSlug=' + titleSlug, 'Memo', 'width=400,height=300');
+            var memoWindow = window.open('memo.php?titleSlug=' + titleSlug, 'Memo', 'width=700,height=400');
         }
 
         function updateMemoLabel(titleSlug, label) {

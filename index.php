@@ -4,7 +4,6 @@ include 'config/database.php';
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
     $username = htmlspecialchars($_POST['username']);
 
-    // Fetch problems from the API (limit to 100)
     $apiUrlProblems = 'http://localhost:3000/problems?limit=100';
     $responseProblems = file_get_contents($apiUrlProblems);
     $dataProblems = json_decode($responseProblems, true);
@@ -15,7 +14,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
 
     $problems = $dataProblems['problemsetQuestionList'];
 
-    // Fetch all user submissions from the API
     $apiUrlSubmissions = "http://localhost:3000/$username/submission";
     $responseSubmissions = @file_get_contents($apiUrlSubmissions);
 
@@ -31,7 +29,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
 
     $submissions = $dataSubmissions['submission'];
 
-    // Fetch all user accepted submissions from the API
     $apiUrlAcSubmissions = "http://localhost:3000/$username/acSubmission";
     $responseAcSubmissions = @file_get_contents($apiUrlAcSubmissions);
 
@@ -47,7 +44,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
 
     $acSubmissions = $dataAcSubmissions['submission'];
 
-    // Save problems to the database
     $stmtProblem = $pdo->prepare('INSERT INTO problems (title, title_slug, difficulty) VALUES (?, ?, ?)
                                  ON DUPLICATE KEY UPDATE difficulty = VALUES(difficulty)');
     $stmtProblemId = $pdo->prepare('SELECT id FROM problems WHERE title_slug = ?');
@@ -97,7 +93,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
         }
     }
 
-    // Redirect to dashboard
     header('Location: dashboard.php?username=' . urlencode($username));
     exit;
 }
@@ -109,12 +104,60 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username'])) {
     <meta charset="UTF-8">
     <title>LeetCode User Input</title>
     <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px 40px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        input[type="text"] {
+            padding: 10px;
+            width: 80%;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Enter LeetCode Username</h1>
-    <form action="index.php" method="POST">
-        <input type="text" name="username" placeholder="Enter LeetCode Username" required>
-        <button type="submit">Submit</button>
-    </form>
+    <div class="container">
+        <h1>Enter LeetCode Username</h1>
+        <form action="index.php" method="POST">
+            <input type="text" name="username" placeholder="Enter LeetCode Username" value="per_ardua_ad_astra" required>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
 </body>
 </html>
